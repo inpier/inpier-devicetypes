@@ -5,7 +5,7 @@
  *  File Name:          Neo CoolCam Motion Sensor.groovy
  *  Initial Release:    2017-09-08
  *  Author:             Inpier
- *  (Minor moificationss to Cyril Peponnet's Fibaro Motion Sensor)
+ *  (Minor moifications to Cyril Peponnet's Fibaro Motion Sensor)
  *
  *  Based on :-
  *  Device Type:        Fibaro Motion Sensor
@@ -38,13 +38,13 @@ metadata {
 
         attribute   "needUpdate", "string"
 
-        capability  "Acceleration Sensor"
+       // capability  "Acceleration Sensor"
         capability  "Battery"
         capability  "Configuration"
         capability  "Illuminance Measurement"
         capability  "Motion Sensor"
         capability  "Sensor"
-        capability  "Temperature Measurement"
+       // capability  "Temperature Measurement"
 
         //fingerprint deviceId: "0x2001", inClusters: "0x30,0x84,0x85,0x80,0x8F,0x56,0x72,0x86,0x70,0x8E,0x31,0x9C,0xEF,0x30,0x31,0x9C"
         //zw:S type:0701 mfr:0258 prod:0003 model:1083 ver:3.93 zwv:4.05 lib:06 cc:5E,86,72,5A,73,80,31,71,30,70,85,59,84 role:06 ff:8C07 ui:8C07
@@ -53,7 +53,7 @@ metadata {
 
     preferences {
         input description: "Once you change values on this page, the `Synced` Status will become `pending` status.\
-                            You can then force the sync by triple clicking the code-button inside the device or wait for the\
+                            You can then force the sync by triple clicking the 'code-button' inside the device or wait for the\
                             next WakeUp (every 2 hours).",
 
               displayDuringSetup: false, type: "paragraph", element: "paragraph"
@@ -107,8 +107,14 @@ metadata {
             state "NO" , label:'Synced', action:"configuration.configure", icon:"st.secondary.refresh-icon", backgroundColor:"#99CC33"
             state "YES", label:'Pending', action:"configuration.configure", icon:"st.secondary.refresh-icon", backgroundColor:"#CCCC33"
         }
+        standardTile("icon", "device.refresh", inactiveLabel: false, decoration: "flat", width: 1, height: 1) {
+            state "default", label:'Last Motion:', icon:"st.Entertainment.entertainment15"
+        }
+        valueTile("lastmotion", "device.lastMotion", decoration: "flat", inactiveLabel: false, width: 2, height: 1) {
+			state "default", label:'${currentValue}'
+        }
         main(["motion", "illuminance"])
-        details(["motion", "illuminance", "configure", "battery"])
+        details(["motion", "illuminance", "configure", "battery", "icon", "lastmotion"])
     }
 }
 
@@ -170,7 +176,7 @@ def parse(String description)
             }
         break
     }
-
+   
     log.debug "=== Parsed '${description}' to ${result.inspect()}"
     if ( result[0] != null ) { result }
 }
@@ -198,9 +204,11 @@ def zwaveEvent(physicalgraph.zwave.commands.crc16encapv1.Crc16Encap cmd)
 */
 def motionValueEvent(Short value, String message)
 {
+    def now = new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
     def description = value ? "$device.displayName detected $message " : "$device.displayName $message has stopped"
     def returnValue = value ? "active" : "inactive"
     createEvent([name: "motion", value: returnValue, descriptionText: description ])
+    sendEvent(name: "lastMotion", value: now)
 }
 
 /**
@@ -481,10 +489,9 @@ def configuration_model()
   <Value type="byte" index="1" label="SENSITIVITY LEVEL SETTING" min="8" max="255" value="12">
     <Help>
 This parameter defines the sensitivity of PIR detector, it is recommended to test the
-detector with movements from a farthest end of the coverage area at first time of use.
-If movements cannot be detected sensitively, simply adjust the sensitivity level with
-this parameter. This parameter can be configured with the value of 8 through 255, where
-8 means high sensitivity and 255 means lowest sensitivity.
+detector with movements from the farthest end of the coverage area on first time use.
+If movements cannot be detected, simply adjust the sensitivity level with this parameter. 
+This parameter can be configured with the value of 8 through 255, where 8 means high sensitivity and 255 means lowest sensitivity.
 Available settings: 8 - 255
 Default setting: 12
     </Help>
@@ -492,10 +499,10 @@ Default setting: 12
   <Value type="short" index="2" label="ON/OFF DURATION" min="5" max="600" value="30">
     <Help>
 This parameter can determine how long the associated devices should stay ON
-status. For instance, if this parameter is set to 30(second), the PIR detector will send a
+status. For instance, if this parameter is set to 30 (seconds), the PIR detector will send a
 BASIC SET Command to an associated device with value basic set level if PIR
-detector is triggered and the associated device will be turned on for 30(second) before it
-is turned off. This Parameter value must be large than Parameter 6#.
+detector is triggered and the associated device will be turned on for 30 (seconds) before it
+is turned off. This Parameter value must be larger than Parameter 6#.
 Available settings: 5 - 600
 Default setting: 30 seconds
     </Help>
@@ -505,8 +512,7 @@ Default setting: 30 seconds
 Basic Set Command will be sent where contains a value when PIR detector is
 triggered, the receiver will take it for consideration; for instance, if a lamp module is
 received the Basic Set Command of which value is decisive as to how bright of dim
-level of lamp module shall be. This
-Parameter is used to some associated devices.
+level of lamp module shall be. This Parameter is used to some associated devices.
 
 Available settings: 0 - 99 or 255
 Default setting: 99
@@ -556,7 +562,7 @@ Available settings: 1 - 8
 <Help>
 This Parameter can be used to set the interval time in seconds of the sensors ambient illumination level. (Seconds)
 
-Available settings: 1 - 36000
+Available settings: 60 - 36000
 Default setting: 180 (seconds)
 </Help>
     </Value>
@@ -593,10 +599,11 @@ Default setting: 1
        <Item label="Disable LED Blink" value="0" />
        <Item label="Enable LED Blink" value="1" /> 
   </Value>
-   <Value type="short" index="99" label="AMBIENT LIGHT INTENSITY CALIBRATION" min="1" max="65535" value="1000" Size="2">
+   <Value type="short" index="99" label="AMBIENT LIGHT INTENSITY CALIBRATION" min="1" max="65536" value="1000" Size="2">
 <Help>
-This parameter defines the calibrated scale for ambient light intensity. Because the installation method and position of the sensor can result in illuminance errors this parameter allows user to adjust lux to a more accurate level.
-Available settings: 1 - 65535
+This parameter defines the calibrated scale for ambient light intensity. Because the installation method and position of the sensor can 
+result in illuminance errors this parameter allows user to adjust lux to a more accurate level.
+Available settings: 1 - 65536
 Default setting: 1000 
 
 </Help>
