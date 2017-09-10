@@ -207,8 +207,9 @@ def motionValueEvent(Short value, String message)
     def now = new Date().format("yyyy MMM dd EEE h:mm:ss a", location.timeZone)
     def description = value ? "$device.displayName detected $message " : "$device.displayName $message has stopped"
     def returnValue = value ? "active" : "inactive"
-    createEvent([name: "motion", value: returnValue, descriptionText: description ])
     sendEvent(name: "lastMotion", value: now)
+    createEvent([name: "motion", value: returnValue, descriptionText: description ])
+    
 }
 
 /**
