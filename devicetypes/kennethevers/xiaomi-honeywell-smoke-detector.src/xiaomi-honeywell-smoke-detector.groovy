@@ -10,6 +10,11 @@
  *  on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License
  *  for the specific language governing permissions and limitations under the License.
  *
+ *  2017/09/11 -- Inpier added Battery Level and Smoke Alarm Last Tested. Note both these are best guess from live logging data received.
+ *  			  PDF Manual can be found here - http://files.xiaomi-mi.com/files/MiJia_Honeywell/MiJia_Honeywell_Smoke_Detector_EN.pdf
+ *
+ *
+ *
  */
  
 metadata {
@@ -18,11 +23,12 @@ metadata {
         capability "Configuration"
         capability "Smoke Detector"
         capability "Sensor"
-        capability "Battery"  // NOT WORKING
-        capability "Temperature Measurement" //attributes: temperature NOT WORKING
+        capability "Battery"  // NOT WORKING #### Fixed??
+        //capability "Temperature Measurement" //attributes: temperature NOT WORKING 
         capability "Refresh"
         
         command "enrollResponse"
+        attribute "lastTested", "String"
  
  
 		fingerprint profileID: "0104", deviceID: "0402", inClusters: "0000,0003,0012,0500", outClusters: "0019"
@@ -50,8 +56,9 @@ metadata {
         standardTile("icon", "", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
             state "default", label:'Last Tested', icon:"st.alarm.smoke.test"
         }
-        valueTile("tested", "device.tested", inactiveLabel: false, decoration: "flat", width: 4, height: 2) {
-            state "tested", label:'${currentValue}', unit:""
+        valueTile("lastTested", "device.lastTested", inactiveLabel: false, decoration: "flat", width: 4, height: 2) {
+            state "default", label:'${currentValue}'//, backgroundColor:"#33cc33"
+            //state "notTested", label:'Not Tested since: ${currentValue}', backgroundColor:"#ff3300"
         } // NOT WORKING
             
         standardTile("configure", "device.configure", inactiveLabel: false, decoration: "flat", width: 2, height: 2) {
@@ -61,7 +68,7 @@ metadata {
 			state "default", action:"refresh.refresh", icon:"st.secondary.refresh"
 		}        
 		main (["smoke"])
-		details(["smoke", "battery", "refresh","configure", "icon", "tested"])
+		details(["smoke", "battery", "refresh","configure", "icon", "lastTested"])
 	}
 }
  
@@ -189,7 +196,7 @@ private Map getTestedResult(value) {
 	def linkText = getLinkText(device)
 	def descriptionText = "${linkText} is ${value = 'Tested'}"
 	return [
-		name: 'tested',
+		name: 'lastTested',
 		value: now,
 		descriptionText: descriptionText
 	]
