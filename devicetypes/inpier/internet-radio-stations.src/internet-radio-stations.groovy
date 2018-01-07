@@ -160,7 +160,7 @@ tiles {
 preferences {
 
         section {
-           input title: "Station Names", description: "Eenter a Name and Url for each  Internet Radio Station in the fields below or leave as default.", displayDuringSetup: false, type: "paragraph", element: "paragraph"
+           input title: "Station Names", description: "Enter a Name and Url for each  Internet Radio Station in the fields below or leave as default.", displayDuringSetup: false, type: "paragraph", element: "paragraph"
            input name: "Station1", type: "text", title: "Enter Name for Station 1", description: "", defaultValue: "Station 1", displayDuringSetup: true
            input name: "Station1Url", type: "text", title: "Enter the Url for Station 1", description: "", defaultValue: "http://bbcmedia.ic.llnwd.net/stream/bbcmedia_radio2_mf_p", displayDuringSetup: false
            input name: "Station2", type: "text", title: "Enter Name for Station 2", description: "", defaultValue: "Station 2", displayDuringSetup: false
